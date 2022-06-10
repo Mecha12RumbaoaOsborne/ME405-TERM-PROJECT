@@ -16,3 +16,7 @@ board memory and draw it on a white board. Inkscape was used to generate an hpgl
 is ran, the plotter waits for a button input to begin using the scheduler to parse the hpgl files for instructions and coordinates
 which are then sent to the steppers as integer theta inputs. The plotter then draws the image point by point until it finishes. Finally,
 when the drawing is finished the motors home to their original states. 
+
+Demo Video:
+
+[![ME405 DEMO](http://img.youtube.com/vi/i4va4gdoDfE/0.jpg)](http://www.youtube.com/watch?v=i4va4gdoDfE "ME405 POLAR PLOTTER DEMO")
