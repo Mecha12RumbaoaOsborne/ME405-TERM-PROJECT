@@ -12,9 +12,6 @@
             according to it. The xy coordinates are converted to theta 1 and theta 2 values
             sento to the repective stepper. Once the task finishes a flag is raised and 
             the steppers go back to home position. 
-@n
-@image html name.png
-
 @n     
 Source Folder
     [https://github.com/Mecha12RumbaoaOsborne/ME405-TERM-PROJECT]

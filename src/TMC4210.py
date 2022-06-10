@@ -6,8 +6,7 @@
 @details    The file includes methods for setting target position/velocity, reading 
             position/velocity, writing to configuration adresses, and homing/zeroing
             the stepper motors.. 
-@n
-    
+
 Source Folder
     [https://github.com/Mecha12RumbaoaOsborne/ME405-TERM-PROJECT]
 @n
