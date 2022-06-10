@@ -1,0 +1,1 @@
+This folder contains all the mechanical design files for the polar plotter. These CAD files were made on SolidWorks 2022. 
