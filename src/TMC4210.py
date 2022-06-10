@@ -1,3 +1,22 @@
+"""!@file TMC4210.py
+@brief      Class file for stepper drivers.
+@n
+@page driver  TMC4210.py
+@brief      This class file contains the methods and attributes of the TMC4210 drivers.
+@details    The file includes methods for setting target position/velocity, reading 
+            position/velocity, writing to configuration adresses, and homing/zeroing
+            the stepper motors.. 
+@n
+    
+Source Folder
+    [https://github.com/Mecha12RumbaoaOsborne/ME405-TERM-PROJECT]
+@n
+
+@author Barret Osborne
+@author Ruodolf Rumbaoa
+@date 06/09/2022
+
+"""
 from pyb import SPI, Pin, Timer
 import time
 
@@ -37,7 +56,21 @@ GLOBAL_PARAMETERS    = 0x7E
 class TMC4210drv:
     
     def __init__(self, spi_num, spi_mode, spi_baud, spi_phase, spi_pol, spi_crc, ncsPin, clk_timer, clk_channel, clkPin, ENPin):
-
+        '''
+        @brief      Initializes the drviver objects.
+        @details    The driver objects are initialized as SPI2 peripherals with 
+                    pin objects for clock timer/channel and enable PIN.
+        @param spi_num SPI bus to initialize the driver (using SPI2)
+        @param spi_mode SPI.PERIPHERAL
+        @param spi_baud Baudrate for SPI transmission (using 1_000_000).
+        @param spi_phase spi_pol These parameters dictate the mode being ran (using mode 3)
+        @param spi_crc None
+        @param ncsPin Pin object used for chip select
+        @param clk_timer Timer object being used by drivers
+        @param clk_channel Timer channel
+        @param clkPin Pin object being used for clock signal 
+        @param ENPin Pin object used for EN
+        '''
         #use spi(2)
         self.spi = SPI(spi_num)
         
@@ -62,7 +95,9 @@ class TMC4210drv:
         pass
        
     def enable(self):
-        
+        '''
+        @brief enables the stepper
+        '''
         #Sets en_sd bit to 1
         enableba = bytearray([IF_CONFIGURATION_4210, 0x00, 0x00, 0x20])
         
@@ -77,6 +112,9 @@ class TMC4210drv:
         pass
     
     def setRampmode(self):
+        '''
+        @brief sets the driver to ramp mode. used for position control
+        '''
         #Sets the driver to Ramp mode. Used for position control
         rampmode = bytearray([0x14, 0x00, 0x00, 0b00000000])
         
@@ -87,6 +125,9 @@ class TMC4210drv:
         pass
     
     def setVelmode(self):
+        '''
+        @brief sets the drivers to velocity mode. used for constant velocity control
+        '''
         #Sets the driver to Velocity mode. Used for constant velocity applications
         velmode = bytearray([0x14, 0x00, 0x00, 0b00000010])
         
@@ -97,6 +138,10 @@ class TMC4210drv:
         pass
     
     def setHoldmode(self):
+        '''
+        @breif sets the drvier to hold mode. used to overwrite actual position
+               when writing to X_ACTUAL address
+        '''
         #Sets the driver to Velocity mode. Used for constant velocity applications
         holdmode = bytearray([0x14, 0x00, 0x00, 0b00000011])
         
@@ -106,14 +151,18 @@ class TMC4210drv:
         
         pass
     def disable(self):
-        
+        '''
+        @breif disables the motors
+        '''
         #Set enable pin high to disable motor power
         self.EN.high()
         
         pass
     
     def getPos(self):
-        
+        '''
+        @breif reads the position of the motor in microsteps
+        '''
         #Read from X_ACTUAL address
         getPos = bytearray([0x03, 0x00, 0x00,0x00])
         
@@ -126,7 +175,9 @@ class TMC4210drv:
         return self.intVal
     
     def setPos(self, inputPos):
-        
+        '''
+        @breif sets target position of stepper
+        '''
         #Convert integer input to a bytes objects
         inputPos = (inputPos).to_bytes(3, 'big')
 
@@ -140,7 +191,9 @@ class TMC4210drv:
         pass
     
     def goZero(self):
-        
+        '''
+        @breif writes X_TARGET to go to zero defined in beginning of main routine
+        '''
         #Write to X_TARGET. Goes back to 0
         gozero = X_TARGET+bytearray([0b00000000, 0b00000000, 0b00000000])
         
@@ -151,7 +204,9 @@ class TMC4210drv:
         pass
     
     def zeroHere(self):
-        
+        '''
+        @breif defines the zero position of stepper
+        '''
         setZero = bytearray([X_ACTUAL, 0b00000000,0b00000000, 0b00000000])
         
         #Need to set to Velocity mode before overwrting X_ACTUAL
@@ -169,7 +224,9 @@ class TMC4210drv:
         pass
     
     def setVelT(self, inputVel):
-        
+        '''
+        @breif sets target velocity when in velocity mode
+        '''
         #Write to V_TARGET 
         setVelT = V_TARGET + (0x00).to_bytes(2, 'big') + (inputVel).to_bytes(1, 'big', signed=True)
 
@@ -182,7 +239,9 @@ class TMC4210drv:
         pass
     
     def getVel(self):
-        
+        '''
+        @breif reads velocity of stepper
+        '''
         #Read from V_ACTUAL address
         getVel = bytearray([V_ACTUAL, 0x00, 0x00,0x00])
         
@@ -195,7 +254,10 @@ class TMC4210drv:
         pass
     
     def setMaxVel(self, inputMaxvel):
-        
+        '''
+        @breif configures max velocity of stepper. recommend to use low speeds
+               for position control
+        '''
         #Write to V_MAX address
         setMaxvel = bytearray([V_MAX,0b00000000, 0b00000, inputMaxvel])
         
@@ -207,7 +269,10 @@ class TMC4210drv:
         pass
     
     def setMinVel(self, inputMinvel):
-        
+        '''
+        @breif configures min velocity of stepper. recommend to use low speeds
+               for position control
+        '''
         #Write to V_MIN address
         setMinvel = bytearray([V_MIN, 0b00000000, 0b00000, inputMinvel])
         
@@ -219,11 +284,11 @@ class TMC4210drv:
         
         pass
     
-    def getAcc(self):
-        pass
     
     def setMaxAcc(self, inputMaxacc1, inputMaxacc2):
-        
+        '''
+        @breif configures max acceleration of stepper
+        '''
         #Write to A_MAX address
         setMaxacc = bytearray([A_MAX, 0b00000000, inputMaxacc1, inputMaxacc2])
 
@@ -236,7 +301,9 @@ class TMC4210drv:
         pass
     
     def setPulseramppulsediv(self, inputPramp, inputPlsdiv):
-        
+        '''
+        @breif configures pulse ramp and pulse divider for stepper frequencies
+        '''
         #Write to PULSE_DIV_RAMP_DIV address
         setPramppdiv = bytearray([PULSE_DIV_RAMP_DIV, 0b00000000, inputPramp, inputPlsdiv, 0b00000000])
         
@@ -250,7 +317,10 @@ class TMC4210drv:
         pass
     
     def setPMULPDIV(self, inputPMUL, inputPDIV):
-        
+        '''
+        @breif configures PMUL and PDIV. need to find a matching pair according
+               according to datasheet
+        '''
         #Write to PMUL_PDIV
         setPMULPDIV = bytearray([PMUL_PDIV, 0b00000001, inputPMUL, inputPDIV])
         

@@ -1,3 +1,30 @@
+"""!@file main.py
+@brief      Main file for polar plotter project.
+@n
+@page mainroutine  main.py
+@brief      This main routine makes use of the provided scheduler to run the parsing
+            of an hpgl file saved in baord memory, and sending insturctions(pen up/down)
+            and coordinates to the plotter.
+@details    When ran, the main routine waits for the user to press the blue button on the 
+            NucleoL476RG board. Once this press is detected, the scheduler runs the parsing
+            and drawing task to extract instructions and coordinates from the hpgl file.
+            The instructions are interpreted as pen up/down and the DC motor actuates
+            according to it. The xy coordinates are converted to theta 1 and theta 2 values
+            sento to the repective stepper. Once the task finishes a flag is raised and 
+            the steppers go back to home position. 
+@n
+@image html name.png
+
+@n     
+Source Folder
+    [https://github.com/Mecha12RumbaoaOsborne/ME405-TERM-PROJECT]
+@n
+
+@author Barret Osborne
+@author Ruodolf Rumbaoa
+@date 06/09/2022
+
+"""
 from ulab import numpy as np
 #import numpy as np
 import cotask, task_share, gc, array
@@ -7,22 +34,37 @@ from pyb import SPI, Pin, Timer, ExtInt, UART
 from TMC4210 import TMC4210drv
 
 def onButtonpress(IRQ_src):
+    '''
+    @breif Button flag used to start the drawing task
+    '''
     buttonFlag.put(1)
     
 def g(x, theta, r):
+    '''
+    @breif Calculates motor thetas from xy coordinate inputs
+    '''
     g1 = x[0]-r*theta[1]*float(cos(theta[0])) 
     g2 = x[1]-r*theta[1]*float(sin(theta[0]))
     return np.array([g1, g2])
 
 def dg_dtheta(theta, r):
+    '''
+    @breif Calculates the jacobian
+    '''
     return np.array([[r*theta[1]*float(sin(theta[0])), -r*float(cos(theta[0]))],
                             [-r*theta[1]*float(cos(theta[0])), -r*float(sin(theta[0]))]]) 
 
 def NewtonRaphson (fcn, jacobian, guess, thresh):
+    '''
+    @breif Calculates the new thetas approximated by NewtonRaphson method
+    '''
     new_theta = guess - (np.dot(np.linalg.inv(jacobian),fcn))
     return new_theta
 
 def iterate(fcn, x, theta, r, thresh):
+    '''
+    @breif Used to iteratively call NewtoRaphson method to find motor thetas
+    '''
     while True:
         newTheta = fcn(g(x, theta, r), dg_dtheta(theta, r), theta, thresh)
         gtheta = g(x, theta, r)
@@ -36,6 +78,11 @@ def iterate(fcn, x, theta, r, thresh):
     return correct_theta
 
 def parse(file):
+    '''
+    @breif Opens the hpgl file defined and extracts pen up/down instructions
+           and xy coordinates of each point
+    @param file The hpgl file to be prsed
+    '''
     with open(file, 'r') as f:
         for item in f:
             command = item.split(';')
@@ -54,6 +101,10 @@ def parse(file):
     return shapesInst
 
 def extract(insts):
+    '''
+    @breif Splits extracted instructions by commas to generate xy coordinates
+    @param insts Instructions extracted from parsed file
+    '''
     instOut = []
     val = insts.split(',')
 
@@ -64,6 +115,9 @@ def extract(insts):
     return instOut
 
 def drawTask ():
+    '''
+    @breif Calls the draw function and sets flag to represent when drawing is finished
+    '''
     while True:
         print('DRAWING')
         xcoordData.clear()
@@ -78,6 +132,11 @@ def drawTask ():
     yield state
         
 def draw(instVal):
+    '''
+    @breif Uses the extracted xy coordinates to calculate motor thetas. Then sends
+           motor thetas to respective stepper. Also interprets pen instructions to 
+           actuate DC motor.
+    '''
     inst = instVal[0]
     k=0
     if inst[0][0:2] == 'PU':
